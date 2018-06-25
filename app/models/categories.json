@@ -1,0 +1,186 @@
+[
+  {
+    "id": 0,
+    "displayName": "All"
+  },
+  {
+    "id": 1,
+    "displayName": "Antiques"
+  },
+  {
+    "id": 2,
+    "displayName": "appliances"
+  },
+  {
+    "id": 3,
+    "displayName": "arts+crafts"
+  },
+  {
+    "id": 4,
+    "displayName": "wheels+tires"
+  },
+  {
+    "id": 5,
+    "displayName": "wanted"
+  },
+  {
+    "id": 6,
+    "displayName": "tools"
+  },
+  {
+    "id": 7,
+    "displayName": "toys+games"
+  },
+  {
+    "id": 45,
+    "displayName": "trailers"
+  },
+  {
+    "id": 8,
+    "displayName": "video gaming"
+  },
+  {
+    "id": 9,
+    "displayName": "motorcycles"
+  },
+  {
+    "id": 10,
+    "displayName": "music instr"
+  },
+  {
+    "id": 11,
+    "displayName": "photo+video"
+  },
+  {
+    "id": 12,
+    "displayName": "rvs+camp"
+  },
+  {
+    "id": 13,
+    "displayName": "tickets"
+  },
+  {
+    "id": 14,
+    "displayName": "sporting"
+  },
+  {
+    "id": 15,
+    "displayName": "atv/utv/sno"
+  },
+  {
+    "id": 16,
+    "displayName": "auto parts"
+  },
+  {
+    "id": 17,
+    "displayName": "aviation"
+  },
+  {
+    "id": 18,
+    "displayName": "baby+kid"
+  },
+  {
+    "id": 19,
+    "displayName": "barter"
+  },
+  {
+    "id": 20,
+    "displayName": "beauty+hlth"
+  },
+  {
+    "id": 21,
+    "displayName": "bike parts"
+  },
+  {
+    "id": 22,
+    "displayName": "bikes"
+  },
+  {
+    "id": 23,
+    "displayName": "boat parts"
+  },
+  {
+    "id": 24,
+    "displayName": "boats"
+  },
+  {
+    "id": 25,
+    "displayName": "books"
+  },
+  {
+    "id": 26,
+    "displayName": "business"
+  },
+  {
+    "id": 27,
+    "displayName": "cars+trucks"
+  },
+  {
+    "id": 28,
+    "displayName": "cds/dvd/vhs"
+  },
+  {
+    "id": 29,
+    "displayName": "cell phones"
+  },
+  {
+    "id": 30,
+    "displayName": "clothes+acc"
+  },
+  {
+    "id": 31,
+    "displayName": "collectibles"
+  },
+  {
+    "id": 32,
+    "displayName": "computer parts"
+  },
+  {
+    "id": 33,
+    "displayName": "computers"
+  },
+  {
+    "id": 34,
+    "displayName": "electronics"
+  },
+  {
+    "id": 35,
+    "displayName": "farm+garden"
+  },
+  {
+    "id": 36,
+    "displayName": "free"
+  },
+  {
+    "id": 37,
+    "displayName": "furniture"
+  },
+  {
+    "id": 38,
+    "displayName": "garage sale"
+  },
+  {
+    "id": 39,
+    "displayName": "general"
+  },
+  {
+    "id": 40,
+    "displayName": "heavy equip"
+  },
+  {
+    "id": 41,
+    "displayName": "household"
+  },
+  {
+    "id": 42,
+    "displayName": "jewelry"
+  },
+  {
+    "id": 43,
+    "displayName": "materials"
+  },
+  {
+    "id": 44,
+    "displayName": "motorcycle parts"
+  }
+]
