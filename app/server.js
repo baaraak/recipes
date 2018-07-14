@@ -6,6 +6,7 @@ import helmet from 'helmet';
 
 import routes from './routes';
 import Constants from './config/constants';
+import mocks from './services/mocks';
 
 const app = express();
 
@@ -13,6 +14,7 @@ const app = express();
 // Enable CORS with various options
 // https://github.com/expressjs/cors
 app.use(cors());
+app.use(helmet());
 
 // Parse incoming request bodies
 // https://github.com/expressjs/body-parser
@@ -30,12 +32,15 @@ app.use('/uploads', express.static(`uploads`));
 // Mount API routes
 app.use(Constants.apiPrefix, routes);
 
-app.listen(Constants.port, () => {
-  // eslint-disable-next-line no-console
-  console.log(`
+// mocks().then(() => {
+
+    app.listen(Constants.port, () => {
+        // eslint-disable-next-line no-console
+        console.log(`
     Port: ${Constants.port}
     Env: ${app.get('env')}
   `);
-});
+    });
+// });
 
 export default app;

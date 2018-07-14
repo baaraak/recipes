@@ -16,10 +16,15 @@ const ProductSchema = new Schema({
     },
     radius: Number,
     images: Array,
-    matches: { type: Schema.Types.ObjectId, ref: 'Match' },
     user: { type: Schema.Types.ObjectId, ref: 'User' },
     category: String,
     wanted: Array,
+    likes: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
+    dislikes: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
+    matches: [{
+        room: { type: Schema.Types.ObjectId, ref: 'Room' },
+        product: { type: Schema.Types.ObjectId, ref: 'Product' },
+    }],
     notification: {
         type: Number,
         default: 0,
@@ -30,6 +35,14 @@ const ProductSchema = new Schema({
     },
 }, {
     timestamps: true,
+});
+
+ProductSchema.set('toJSON', {
+    virtuals: true,
+    transform(doc, obj) {
+        delete obj.__v;
+        return obj;
+    },
 });
 
 const ProductModel = mongoose.model('Product', ProductSchema);

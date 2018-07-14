@@ -8,6 +8,7 @@ const Schema = mongoose.Schema;
 const UserSchema = new Schema({
     firstName: String,
     lastName: String,
+    avatar: String,
     email: {
         type: String,
         unique: true,

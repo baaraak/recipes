@@ -1,12 +1,39 @@
 import BaseController from './base.controller';
 import Product from '../models/product';
 import User from '../models/user';
-import Match from '../models/match';
+import Room from '../models/room';
+import Message from '../models/message';
 import { validator } from '../services/validator';
 import createError from '../services/error';
 
 class ProductController extends BaseController {
 
+    getSwipingList = async (productId, callback) => {
+        const product = await Product.findOne({ _id: productId });
+        let products = [];
+        if (product.matches.length === 0) callback([]);
+        for (let i = 0; i < product.matches.length; i++) {
+            await Product.findOne({ _id: product.matches[i].product }, async function(err, p) {
+                if (err) {
+                    callback(err);
+                } else {
+                    const { room } = product.matches[i];
+                    await Message.findOne({ roomId: room }, null, { sort: { date: 1 } }, async function(err, m) {
+                        if (err) {
+                            callback(err);
+                        } else {
+                            await products.push({
+                                roomId: room,
+                                product: p,
+                                lastMessage: m,
+                            });
+                            if (products.length === product.matches.length) return callback(products);
+                        }
+                    });
+                }
+            });
+        }
+    }
 
     // Middleware to populate post based on url param
     _populate = async (req, res, next) => {
@@ -78,7 +105,7 @@ class ProductController extends BaseController {
         if (!validator.location(locationStr)) return next(createError('location not valid'));
         if (!validator.category(category)) return next(createError('category not valid'));
         if (!Array.isArray(wanted)) return next(createError('wanted not valid'));
-        const match = new Match();
+
         const productInc = new Product({
             title,
             description,
@@ -87,7 +114,6 @@ class ProductController extends BaseController {
             location,
             images,
             wanted,
-            matches: match._id,
             user: req.currentUser._id,
         });
         const product = await productInc.save();
@@ -152,31 +178,71 @@ class ProductController extends BaseController {
 
     like = async (req, res, next) => {
         const { from, to } = req.body;
-        Match.findOneAndUpdate(
-            { productId: from },
-            { $push: { likes: to } },
-            { safe: true, upsert: true },
-            (err, model) => err ? next(createError('server error')) : res.json({ success: true })
-        );
+        const likedProduct = await Product.findOne({ _id: to });
+        const isMatch = likedProduct.likes.some((l) => l.toString() === from.toString());
+        if (isMatch) {
+            const room = await new Room();
+            Product.findOneAndUpdate({ _id: from }, {
+                    $addToSet: {
+                        likes: to,
+                        matches: { room: room._id, product: to },
+                    },
+                }, { safe: true, upsert: true },
+                (error) => error
+                    ? next(createError('server error'))
+                    : Product.findOneAndUpdate({ _id: to }, {
+                            $addToSet: {
+                                matches: {
+                                    room: room._id,
+                                    product: from,
+                                },
+                            },
+                        }, { safe: true, upsert: true },
+                        (error) => error ? next(createError('server error')) : res.json({ success: true, isMatch })));
+        } else {
+            Product.findOneAndUpdate({ _id: from }, { $addToSet: { likes: to } }, { safe: true, upsert: true },
+                (error, user) => error ? next(createError('server error')) : res.json({ success: true, isMatch }));
+        }
     }
 
     dislike = async (req, res, next) => {
         const { from, to } = req.body;
-        Match.findOneAndUpdate(
-            { productId: from },
-            { $push: { dislikes: to } },
-            { safe: true, upsert: true },
-            (err, model) => err ? next(createError('server error')) : res.json({ success: true })
-        );
+        Product.findOneAndUpdate({ _id: from }, { $addToSet: { dislikes: to } }, { safe: true, upsert: true },
+            (error) => error ? next(createError('server error')) : res.json({ success: true }));
     }
 
     swipe = async (req, res, next) => {
         const user = req.user || req.currentUser;
-        const products = await Product.find({ 'user': { $ne: user._id } }).populate('matches');
-        console.log('****************************')
-        console.log(products)
-        console.log('****************************')
-        res.json({ products });
+        const product = user.products.filter((p) => p._id.toString() === req.params.id)[0];
+        let query = { user: { $ne: user._id } };
+        const products = await Product.find(query);
+        const allLikes = [...product.likes, ...product.dislikes];
+        const newProducts = products.filter((p) => !allLikes.some((id, test) => id.toString() === p._id.toString()));
+        res.json({ products: newProducts });
+    }
+
+    matches = async (req, res, next) => {
+        const user = req.user || req.currentUser;
+        const productId = req.params.id;
+        this.getSwipingList(productId, (data) => {
+            res.send(data);
+        });
+    }
+
+    messages = async (req, res, next) => {
+        const user = req.user || req.currentUser;
+        const roomId = req.params.id;
+        const messages = await Message.find({ roomId });
+        res.json({ messages });
+    }
+
+    createMessage = async (req, res, next) => {
+        const { to, from, body, roomId } = req.body;
+        const message = new Message({ to, from, body, roomId });
+        message.save((err, m) => {
+            if (err) return res.send({ success: false });
+            res.send({ success: true });
+        });
     }
 }
 

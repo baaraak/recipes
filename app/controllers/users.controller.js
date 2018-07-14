@@ -99,6 +99,12 @@ class UsersController extends BaseController {
             next(err);
         }
     }
+
+    changeAvatar = async (req, res, next) => {
+        if (req.file) {
+            res.json({ path: req.file.path });
+        }
+    }
 }
 
 export default new UsersController();
