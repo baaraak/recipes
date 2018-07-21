@@ -189,7 +189,7 @@ class ProductController extends BaseController {
                     matches: { room: room._id, product: to },
                 },
             }, { safe: true, upsert: true },
-                (error) => error
+                (error, fromProduct) => error
                     ? next(createError('server error'))
                     : Product.findOneAndUpdate({ _id: to }, {
                         $addToSet: {
@@ -199,7 +199,15 @@ class ProductController extends BaseController {
                             },
                         },
                     }, { safe: true, upsert: true },
-                        (error) => error ? next(createError('server error')) : res.json({ success: true, isMatch })));
+                        (error, toProduct) => error ? next(createError('server error'))
+                            : res.json({
+                                success: true,
+                                isMatch: {
+                                    roomID: room._id,
+                                    fromProduct,
+                                    toProduct,
+                                },
+                            })));
         } else {
             Product.findOneAndUpdate({ _id: from }, { $addToSet: { likes: to } }, { safe: true, upsert: true },
                 (error, user) => error ? next(createError('server error')) : res.json({ success: true, isMatch }));
@@ -253,6 +261,11 @@ class ProductController extends BaseController {
         const limit = 20;
         const offset = 0;
         let query = [{ $match: { user: { $ne: user._id } } }];
+        console.log('***********************');
+        console.log(minPrice);
+        console.log(maxPrice);
+        console.log(typeof minPrice);
+        console.log('***********************');
         if (text) {
             query.push({
                 $match: { $or: [{ title: { $regex: text, $options: 'i' } }, { description: { $regex: text, $options: 'i' } }] }
