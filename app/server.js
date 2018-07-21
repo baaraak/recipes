@@ -6,9 +6,12 @@ import helmet from 'helmet';
 
 import routes from './routes';
 import Constants from './config/constants';
+import SocketController from './controllers/socket.controller';
 import mocks from './services/mocks';
 
 const app = express();
+var io = require('socket.io')();
+var server = require('http').Server(app);
 
 
 // Enable CORS with various options
@@ -32,9 +35,13 @@ app.use('/uploads', express.static(`uploads`));
 // Mount API routes
 app.use(Constants.apiPrefix, routes);
 
+io.on('connection', SocketController);
+
+io.attach(server);
+
 // mocks().then(() => {
 
-    app.listen(Constants.port, () => {
+server.listen(Constants.port, () => {
         // eslint-disable-next-line no-console
         console.log(`
     Port: ${Constants.port}

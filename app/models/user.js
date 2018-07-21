@@ -8,7 +8,10 @@ const Schema = mongoose.Schema;
 const UserSchema = new Schema({
     firstName: String,
     lastName: String,
-    avatar: String,
+    avatar: {
+        type: String,
+        default: 'uploads/avatar.png',
+    },
     email: {
         type: String,
         unique: true,

@@ -77,14 +77,26 @@ class UsersController extends BaseController {
     };
 
     update = async (req, res, next) => {
-        const newAttributes = this.filterParams(req.body, this.whitelist);
-        const updatedUser = Object.assign({}, req.currentUser, newAttributes);
-
-        try {
-            res.status(200).json(await updatedUser.save());
-        } catch (err) {
-            next(err);
-        }
+        const { firstName, lastName, email, country, avatar } = req.body;
+        let newAttributes = {};
+        if (validator.firstName(firstName)) newAttributes.firstName = firstName;
+        if (validator.lastName(lastName)) newAttributes.lastName = lastName;
+        if (validator.email(email)) newAttributes.email = email;
+        if (validator.country(country)) newAttributes.country = country;
+        if (validator.avatar(avatar)) newAttributes.avatar = avatar;
+        User.findOne({ email }, (err, user) => {
+            if (user.length > 0 && user._id !== req.currentUser._id) return next(createError('Email already exist'));
+        });
+        User.findOneAndUpdate(
+            { _id: req.currentUser._id },
+            { $set: { ...newAttributes } },
+            { new: true },
+            function(err, user) {
+            if (err) {
+                return next(createError('Something went wrong, please try again later'));
+            }
+            res.status(201).json({ success: true });
+        });
     };
 
     delete = async (req, res, next) => {

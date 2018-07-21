@@ -5,6 +5,7 @@ import Room from '../models/room';
 import Message from '../models/message';
 import { validator } from '../services/validator';
 import createError from '../services/error';
+import { Z_VERSION_ERROR } from 'zlib';
 
 class ProductController extends BaseController {
 
@@ -13,12 +14,12 @@ class ProductController extends BaseController {
         let products = [];
         if (product.matches.length === 0) callback([]);
         for (let i = 0; i < product.matches.length; i++) {
-            await Product.findOne({ _id: product.matches[i].product }, async function(err, p) {
+            await Product.findOne({ _id: product.matches[i].product }, async function (err, p) {
                 if (err) {
                     callback(err);
                 } else {
                     const { room } = product.matches[i];
-                    await Message.findOne({ roomId: room }, null, { sort: { date: 1 } }, async function(err, m) {
+                    await Message.findOne({ roomId: room }, null, { sort: { date: 1 } }, async function (err, m) {
                         if (err) {
                             callback(err);
                         } else {
@@ -162,7 +163,7 @@ class ProductController extends BaseController {
         if (Array.isArray(wanted)) newData.wanted = wanted;
         if (images) newData.images = images;
 
-        Product.findOneAndUpdate({ _id }, { $set: { ...newData } }, { new: true }, function(err, product) {
+        Product.findOneAndUpdate({ _id }, { $set: { ...newData } }, { new: true }, function (err, product) {
             if (err) {
                 return next(createError('Something went wrong, please try again later'));
             }
@@ -183,21 +184,21 @@ class ProductController extends BaseController {
         if (isMatch) {
             const room = await new Room();
             Product.findOneAndUpdate({ _id: from }, {
-                    $addToSet: {
-                        likes: to,
-                        matches: { room: room._id, product: to },
-                    },
-                }, { safe: true, upsert: true },
+                $addToSet: {
+                    likes: to,
+                    matches: { room: room._id, product: to },
+                },
+            }, { safe: true, upsert: true },
                 (error) => error
                     ? next(createError('server error'))
                     : Product.findOneAndUpdate({ _id: to }, {
-                            $addToSet: {
-                                matches: {
-                                    room: room._id,
-                                    product: from,
-                                },
+                        $addToSet: {
+                            matches: {
+                                room: room._id,
+                                product: from,
                             },
-                        }, { safe: true, upsert: true },
+                        },
+                    }, { safe: true, upsert: true },
                         (error) => error ? next(createError('server error')) : res.json({ success: true, isMatch })));
         } else {
             Product.findOneAndUpdate({ _id: from }, { $addToSet: { likes: to } }, { safe: true, upsert: true },
@@ -243,6 +244,31 @@ class ProductController extends BaseController {
             if (err) return res.send({ success: false });
             res.send({ success: true });
         });
+    }
+
+    browse = async (req, res, next) => {
+        const user = req.user || req.currentUser;
+        const { text, category, location, minPrice, maxPrice } = req.query;
+        const product = user.products.filter((p) => p._id.toString() === req.params.id)[0];
+        const limit = 20;
+        const offset = 0;
+        let query = [{ $match: { user: { $ne: user._id } } }];
+        if (text) {
+            query.push({
+                $match: { $or: [{ title: { $regex: text, $options: 'i' } }, { description: { $regex: text, $options: 'i' } }] }
+            })
+        }
+        if (category && category !== "0") {
+            query.push({ $match: { category: { $in: category.split(',') } } })
+        }
+        if (minPrice) {
+            query.push({ $match: { 'price.min': { $gt: minPrice } } })
+        }
+        if (minPrice) {
+            query.push({ $match: { 'price.max': { $lt: maxPrice } } })
+        }
+        const products = await Product.aggregate(query);
+        res.json({ products });
     }
 }
 

@@ -45,7 +45,7 @@ routes.post('/auth/login', AuthController.login);
 routes.get('/users', UsersController.getAll);
 routes.post('/users', UsersController.signup);
 routes.get('/users/me', authenticate, UsersController.me);
-routes.put('/users/me', authenticate, UsersController.update);
+routes.put('/users', authenticate, UsersController.update);
 routes.delete('/users/me', authenticate, UsersController.delete);
 routes.get('/users/:email', UsersController._populate, UsersController.me);
 routes.post('/users/avatar', authenticate, upload.single('file'), UsersController.changeAvatar);
@@ -54,6 +54,7 @@ routes.post('/users/avatar', authenticate, upload.single('file'), UsersControlle
 routes.get('/products/:id/swipe', authenticate, ProductsController.swipe);
 routes.get('/products/:id/matches', authenticate, ProductsController.matches);
 routes.get('/products/:id/messages', authenticate, ProductsController.messages);
+routes.get('/products/:id/browse', authenticate, ProductsController.browse);
 routes.post('/products/messages', authenticate, ProductsController.createMessage);
 routes.get('/products', ProductsController.search);
 routes.post('/products', authenticate, ProductsController.create);

@@ -34,8 +34,8 @@ const ProductSchema = new Schema({
         default: true,
     },
 }, {
-    timestamps: true,
-});
+        timestamps: true,
+    });
 
 ProductSchema.set('toJSON', {
     virtuals: true,

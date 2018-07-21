@@ -15,6 +15,7 @@ export const validator = {
     location: (location) => validation.isLatLong(location),
     radius: (radius) => validation.isInt(radius, { gt: 1, lt: 90 }),
     category: (categoryId) => categories.some((cat) => Number(cat.id) === Number(categoryId)),
+    avatar: (avatar) => typeof avatar === 'string',
     productTitle: (title) => typeof title === 'string' && validation.isLength(title, { min: 5, max: 20 }),
     productDescription: (description) => typeof description === 'string' && validation.isLength(description, {
         min: 10,
