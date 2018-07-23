@@ -11,7 +11,6 @@ const defaultConfig = {
     };
   },
 
-  version: require('../../package.json').version,
   root: path.normalize(__dirname + '/../../..'),
   port: process.env.PORT || 9000,
   ip: process.env.IP || '0.0.0.0',
@@ -43,7 +42,7 @@ const defaultConfig = {
 const environmentConfigs = {
   development: {
     mongo: {
-      uri: process.env.MONGO_URI || 'mongodb://localhost:27017/tarely',
+      uri: process.env.MONGO_URI || 'mongodb://root123:root123@ds129333.mlab.com:29333/tarely',
     },
     security: {
       saltRounds: 4,

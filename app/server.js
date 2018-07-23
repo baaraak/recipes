@@ -40,14 +40,13 @@ io.on('connection', SocketController);
 io.attach(server);
 
 // mocks().then(() => {
-
 server.listen(Constants.port, () => {
-        // eslint-disable-next-line no-console
-        console.log(`
+  // eslint-disable-next-line no-console
+  console.log(`
     Port: ${Constants.port}
     Env: ${app.get('env')}
   `);
-    });
+});
 // });
 
 export default app;

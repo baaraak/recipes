@@ -261,11 +261,7 @@ class ProductController extends BaseController {
         const limit = 20;
         const offset = 0;
         let query = [{ $match: { user: { $ne: user._id } } }];
-        console.log('***********************');
-        console.log(minPrice);
-        console.log(maxPrice);
-        console.log(typeof minPrice);
-        console.log('***********************');
+
         if (text) {
             query.push({
                 $match: { $or: [{ title: { $regex: text, $options: 'i' } }, { description: { $regex: text, $options: 'i' } }] }

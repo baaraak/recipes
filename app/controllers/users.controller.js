@@ -42,9 +42,13 @@ class UsersController extends BaseController {
             return res.sendStatus(404);
         }
         const { lat, lng } = req.query;
-        user.location = { lat, lng };
-        res.send(user);
-        User.findOneAndUpdate({ _id: user._id }, { $set: { location: { lat, lng } } });
+        if (lat && lng) {
+            user.location = { lat, lng };
+            res.send(user);
+            User.findOneAndUpdate({ _id: user._id }, { $set: { location: { lat, lng } } });
+        } else {
+            res.send(user);
+        }
     };
 
     signup = async (req, res, next) => {
@@ -91,12 +95,12 @@ class UsersController extends BaseController {
             { _id: req.currentUser._id },
             { $set: { ...newAttributes } },
             { new: true },
-            function(err, user) {
-            if (err) {
-                return next(createError('Something went wrong, please try again later'));
-            }
-            res.status(201).json({ success: true });
-        });
+            function (err, user) {
+                if (err) {
+                    return next(createError('Something went wrong, please try again later'));
+                }
+                res.status(201).json({ success: true });
+            });
     };
 
     delete = async (req, res, next) => {
