@@ -12,28 +12,28 @@ import errorHandler from './middleware/error-handler';
 const routes = new Router();
 
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads');
-    },
-    filename: (req, file, cb) => {
-        cb(null, new Date().toISOString() + file.originalname);
-    },
+  destination: (req, file, cb) => {
+    cb(null, 'uploads');
+  },
+  filename: (req, file, cb) => {
+    cb(null, new Date().toISOString() + file.originalname);
+  },
 });
 
 const fileFilter = (req, file, cb) => {
-    const allowedTypes = ['image/png', 'image/jpg', 'image/jpeg'];
-    if (allowedTypes.some((t) => t === file.mimetype)) {
-        return cb(null, true);
-    }
-    return cb(new Error('file type not allowed'), false);
+  const allowedTypes = ['image/png', 'image/jpg', 'image/jpeg'];
+  if (allowedTypes.some(t => t === file.mimetype)) {
+    return cb(null, true);
+  }
+  return cb(new Error('file type not allowed'), false);
 };
 
 const upload = multer({
-    storage,
-    limits: {
-        fileSize: 1024 * 1024 * 5,
-    },
-    fileFilter,
+  storage,
+  limits: {
+    fileSize: 1024 * 1024 * 5,
+  },
+  fileFilter,
 });
 
 routes.get('/', MetaController.index);
@@ -48,22 +48,41 @@ routes.get('/users/me', authenticate, UsersController.me);
 routes.put('/users', authenticate, UsersController.update);
 routes.delete('/users/me', authenticate, UsersController.delete);
 routes.get('/users/:email', UsersController._populate, UsersController.me);
-routes.post('/users/avatar', authenticate, upload.single('file'), UsersController.changeAvatar);
+routes.post(
+  '/users/avatar',
+  authenticate,
+  upload.single('file'),
+  UsersController.changeAvatar
+);
 
 // Products
 routes.get('/products/:id/swipe', authenticate, ProductsController.swipe);
 routes.get('/products/:id/matches', authenticate, ProductsController.matches);
 routes.get('/products/:id/messages', authenticate, ProductsController.messages);
 routes.get('/products/:id/browse', authenticate, ProductsController.browse);
-routes.post('/products/messages', authenticate, ProductsController.createMessage);
+routes.post(
+  '/products/messages',
+  authenticate,
+  ProductsController.createMessage
+);
 routes.get('/products', ProductsController.search);
 routes.post('/products', authenticate, ProductsController.create);
 routes.post('/products/like', authenticate, ProductsController.like);
 routes.post('/products/dislike', authenticate, ProductsController.dislike);
 routes.put('/products', authenticate, ProductsController.update);
 routes.get('/products/:id', ProductsController.getById);
-routes.delete('/products/:id', authenticate, ProductsController._populate, ProductsController.delete);
-routes.post('/products/image', authenticate, upload.single('file'), ProductsController.uploadImage);
+routes.delete(
+  '/products/:id',
+  authenticate,
+  ProductsController._populate,
+  ProductsController.delete
+);
+routes.post(
+  '/products/image',
+  authenticate,
+  upload.single('file'),
+  ProductsController.uploadImage
+);
 
 // Categories
 routes.get('/categories', authenticate, AuthController.categories);

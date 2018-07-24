@@ -20,7 +20,7 @@ export default function authenticate(req, res, next) {
       }
       req.currentUser = user;
       next();
-    } catch(err) {
+    } catch (err) {
       next(err);
     }
   });

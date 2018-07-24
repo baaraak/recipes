@@ -13,7 +13,6 @@ const app = express();
 var io = require('socket.io')();
 var server = require('http').Server(app);
 
-
 // Enable CORS with various options
 // https://github.com/expressjs/cors
 app.use(cors());

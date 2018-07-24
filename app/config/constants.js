@@ -42,7 +42,9 @@ const defaultConfig = {
 const environmentConfigs = {
   development: {
     mongo: {
-      uri: process.env.MONGO_URI || 'mongodb://root123:root123@ds129333.mlab.com:29333/tarely',
+      uri:
+        process.env.MONGO_URI ||
+        'mongodb://root123:root123@ds129333.mlab.com:29333/tarely',
     },
     security: {
       saltRounds: 4,
@@ -57,4 +59,7 @@ const environmentConfigs = {
 };
 
 // Recursively merge configurations
-export default merge(defaultConfig, environmentConfigs[process.env.NODE_ENV] || {});
+export default merge(
+  defaultConfig,
+  environmentConfigs[process.env.NODE_ENV] || {}
+);

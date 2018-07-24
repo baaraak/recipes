@@ -6,10 +6,31 @@ import Product from '../models/product';
 import createError from './error';
 
 const USERS_TOTAL = 15;
-const USER_EMAILS = ['baaraak@gmail.com', 'bartak@gmail.com', 'barak@gmail.com'];
-const IMAGES = ['uploads/1.jpg', 'uploads/2.jpg', 'uploads/3.jpg', 'uploads/4.jpg', 'uploads/5.jpg', 'uploads/6.jpg'];
+const USER_EMAILS = [
+    'baaraak@gmail.com',
+    'bartak@gmail.com',
+    'barak@gmail.com',
+];
+const IMAGES = [
+    'uploads/1.jpg',
+    'uploads/2.jpg',
+    'uploads/3.jpg',
+    'uploads/4.jpg',
+    'uploads/5.jpg',
+    'uploads/6.jpg',
+];
 
 const getRandomImage = () => IMAGES[Math.floor(Math.random() * IMAGES.length)];
+const getProductPrice = () => {
+    const min = faker.random.number({ min: 50, max: 500 });
+    const max = faker.random.number({ min, max: 800 });
+    return { min, max };
+};
+const getProductWantedCategory = () => {
+    Array.from({ length: Math.floor(Math.random() * 3) + 1 }).map(() =>
+        Math.floor(Math.random() * 44)
+    );
+};
 
 export default async () => {
     try {
@@ -33,25 +54,23 @@ export default async () => {
                         title: faker.name.title(),
                         description: faker.lorem.sentence(),
                         user: user._id,
-                        price: {
-                            min: faker.random.number(50, 200),
-                            max: faker.random.number(250, 400),
-                        },
+                        price: getProductPrice(),
                         location: {
                             lat: faker.address.latitude(),
                             lng: faker.address.longitude(),
                             address: faker.address.streetAddress(),
                         },
                         radius: 50,
-                        images: Array.from({ length: Math.floor(Math.random() * 2) + 1 })
-                            .map((_, i) => getRandomImage()),
+                        images: Array.from({
+                            length: Math.floor(Math.random() * 2) + 1,
+                        }).map((_, i) => getRandomImage()),
                         category: Math.floor(Math.random() * 44),
-                        wanted: ['2', '4'],
+                        wanted: getProductWantedCategory(),
                     });
                     await User.findOneAndUpdate(
                         { _id: user._id },
                         { $addToSet: { products: product._id } },
-                        { safe: true, upsert: true },
+                        { safe: true, upsert: true }
                     );
                 }
             );

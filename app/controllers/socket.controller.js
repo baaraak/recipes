@@ -22,15 +22,12 @@ const uuidv4 = () => new Date();
 *		message {string}
 *		sender {string}
 */
-const createMessage = ({ message = '', sender = '' } = { })=>(
-    {
-        id: uuidv4(),
-        time: getTime(new Date(Date.now())),
-        message,
-        sender,
-    }
-
-);
+const createMessage = ({ message = '', sender = '' } = {}) => ({
+  id: uuidv4(),
+  time: getTime(new Date(Date.now())),
+  message,
+  sender,
+});
 
 /*
 *	createChat
@@ -45,23 +42,24 @@ const createMessage = ({ message = '', sender = '' } = { })=>(
 *		users {Array.string}
 *
 */
-const createChat = ({ messages = [], name = 'Community', users = [] } = {})=>(
-    {
-        id: uuidv4(),
-        name,
-        messages,
-        users,
-        typingUsers: [],
-    }
-);
-
+const createChat = ({
+  messages = [],
+  name = 'Community',
+  users = [],
+} = {}) => ({
+  id: uuidv4(),
+  name,
+  messages,
+  users,
+  typingUsers: [],
+});
 
 /*
 *	@param date {Date}
 *	@return a string represented in 24hr time i.e. '11:30', '19:30'
 */
-const getTime = (date)=>{
-    return `${date.getHours()}:${('0'+date.getMinutes()).slice(-2)}`;
+const getTime = date => {
+  return `${date.getHours()}:${('0' + date.getMinutes()).slice(-2)}`;
 };
 
 let connectedUsers = {};
@@ -69,55 +67,53 @@ let connectedUsers = {};
 let communityChat = createChat();
 
 module.exports = function(socket) {
+  console.log('Socket Id:' + socket.id);
 
-    console.log('Socket Id:' + socket.id);
+  let sendMessageToChatFromUser;
 
-    let sendMessageToChatFromUser;
+  let sendTypingFromUser;
 
-    let sendTypingFromUser;
+  // User Connects with username
+  socket.on(USER_CONNECTED, user => {
+    connectedUsers = addUser(connectedUsers, user);
+    socket.user = user;
 
-    // User Connects with username
-    socket.on(USER_CONNECTED, (user) => {
-        connectedUsers = addUser(connectedUsers, user);
-        socket.user = user;
+    sendMessageToChatFromUser = sendMessageToChat(user.name);
+    sendTypingFromUser = sendTypingToChat(user.name);
 
-        sendMessageToChatFromUser = sendMessageToChat(user.name);
-        sendTypingFromUser = sendTypingToChat(user.name);
+    io.emit(USER_CONNECTED, connectedUsers);
+    console.log(connectedUsers);
+  });
 
-        io.emit(USER_CONNECTED, connectedUsers);
-        console.log(connectedUsers);
-    });
+  // User disconnects
+  socket.on('disconnect', () => {
+    if ('user' in socket) {
+      connectedUsers = removeUser(connectedUsers, socket.user.name);
 
-    // User disconnects
-    socket.on('disconnect', () => {
-        if ('user' in socket) {
-            connectedUsers = removeUser(connectedUsers, socket.user.name);
+      io.emit(USER_DISCONNECTED, connectedUsers);
+      console.log('Disconnect', connectedUsers);
+    }
+  });
 
-            io.emit(USER_DISCONNECTED, connectedUsers);
-            console.log('Disconnect', connectedUsers);
-        }
-    });
+  // User logsout
+  socket.on(LOGOUT, () => {
+    connectedUsers = removeUser(connectedUsers, socket.user.name);
+    io.emit(USER_DISCONNECTED, connectedUsers);
+    console.log('Disconnect', connectedUsers);
+  });
 
+  // Get Community Chat
+  socket.on(COMMUNITY_CHAT, callback => {
+    callback(communityChat);
+  });
 
-    // User logsout
-    socket.on(LOGOUT, () => {
-        connectedUsers = removeUser(connectedUsers, socket.user.name);
-        io.emit(USER_DISCONNECTED, connectedUsers);
-        console.log('Disconnect', connectedUsers);
-    });
+  socket.on(MESSAGE_SENT, ({ chatId, message }) => {
+    sendMessageToChatFromUser(chatId, message);
+  });
 
-    // Get Community Chat
-    socket.on(COMMUNITY_CHAT, (callback) => {
-        callback(communityChat);
-    });
-
-    socket.on(MESSAGE_SENT, ({ chatId, message }) => {
-        sendMessageToChatFromUser(chatId, message);
-    });
-
-    socket.on(TYPING, ({ chatId, isTyping }) => {
-        sendTypingFromUser(chatId, isTyping);
-    });
+  socket.on(TYPING, ({ chatId, isTyping }) => {
+    sendTypingFromUser(chatId, isTyping);
+  });
 };
 
 /*
@@ -127,9 +123,9 @@ module.exports = function(socket) {
 * @return function(chatId, message)
 */
 function sendTypingToChat(user) {
-    return (chatId, isTyping) => {
-        io.emit(`${TYPING}-${chatId}`, { user, isTyping });
-    };
+  return (chatId, isTyping) => {
+    io.emit(`${TYPING}-${chatId}`, { user, isTyping });
+  };
 }
 
 /*
@@ -139,9 +135,12 @@ function sendTypingToChat(user) {
 * @return function(chatId, message)
 */
 function sendMessageToChat(sender) {
-    return (chatId, message) => {
-        io.emit(`${MESSAGE_RECIEVED}-${chatId}`, createMessage({ message, sender }));
-    };
+  return (chatId, message) => {
+    io.emit(
+      `${MESSAGE_RECIEVED}-${chatId}`,
+      createMessage({ message, sender })
+    );
+  };
 }
 
 /*
@@ -151,9 +150,9 @@ function sendMessageToChat(sender) {
 * @return userList {Object} Object with key value pairs of Users
 */
 function addUser(userList, user) {
-    let newList = Object.assign({}, userList);
-    newList[user.name] = user;
-    return newList;
+  let newList = Object.assign({}, userList);
+  newList[user.name] = user;
+  return newList;
 }
 
 /*
@@ -163,9 +162,9 @@ function addUser(userList, user) {
 * @return userList {Object} Object with key value pairs of Users
 */
 function removeUser(userList, username) {
-    let newList = Object.assign({}, userList);
-    delete newList[username];
-    return newList;
+  let newList = Object.assign({}, userList);
+  delete newList[username];
+  return newList;
 }
 
 /*
@@ -175,5 +174,5 @@ function removeUser(userList, username) {
 * @return userList {Object} Object with key value pairs of Users
 */
 function isUser(userList, username) {
-    return username in userList;
+  return username in userList;
 }
