@@ -44,6 +44,25 @@ class ProductController extends BaseController {
         }
     };
 
+    shuffle = (array) => {
+        var currentIndex = array.length, temporaryValue, randomIndex;
+
+        // While there remain elements to shuffle...
+        while (0 !== currentIndex) {
+
+            // Pick a remaining element...
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex -= 1;
+
+            // And swap it with the current element.
+            temporaryValue = array[currentIndex];
+            array[currentIndex] = array[randomIndex];
+            array[randomIndex] = temporaryValue;
+        }
+
+        return array;
+    }
+
     // Middleware to populate post based on url param
     _populate = async (req, res, next) => {
         const { id } = req.params;
@@ -300,7 +319,7 @@ class ProductController extends BaseController {
         const newProducts = products.filter(
             p => !allLikes.some((id, test) => id.toString() === p._id.toString())
         );
-        res.json({ products: newProducts });
+        res.json({ products: this.shuffle(newProducts) });
     };
 
     matches = async (req, res, next) => {
@@ -336,7 +355,6 @@ class ProductController extends BaseController {
         const limit = 20;
         const offset = 0;
         let query = [{ $match: { user: { $ne: user._id } } }];
-
         if (text) {
             query.push({
                 $match: {
@@ -354,8 +372,6 @@ class ProductController extends BaseController {
             query.push({ $match: { 'price.min': { $gt: Number(minPrice) } } });
         }
         if (maxPrice && maxPrice !== 'undefined') {
-            console.log('in');
-            console.log(maxPrice);
             query.push({ $match: { 'price.max': { $lt: Number(maxPrice) } } });
         }
         const products = await Product.aggregate(query);

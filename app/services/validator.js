@@ -31,7 +31,8 @@ export const validator = {
   productPrice: price =>
     typeof price === 'object' &&
     price.hasOwnProperty('min') &&
-    validation.isInt(price.min) &&
+    isNumber(price.min) &&
     price.hasOwnProperty('max') &&
-    validation.isInt(price.max),
+    isNumber(price.max),
 };
+const isNumber = (n) => !isNaN(parseFloat(n)) && !isNaN(n - 0);

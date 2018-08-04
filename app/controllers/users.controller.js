@@ -101,7 +101,7 @@ class UsersController extends BaseController {
       { _id: req.currentUser._id },
       { $set: { ...newAttributes } },
       { new: true },
-      function(err, user) {
+      function (err, user) {
         if (err) {
           return next(
             createError('Something went wrong, please try again later')
