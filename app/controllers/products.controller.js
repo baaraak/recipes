@@ -3,12 +3,38 @@ import Product from '../models/product';
 import User from '../models/user';
 import Room from '../models/room';
 import Message from '../models/message';
+import Bid from '../models/bid';
 import { validator } from '../services/validator';
 import createError from '../services/error';
 import { Z_VERSION_ERROR } from 'zlib';
 
 class ProductController extends BaseController {
-    getSwipingList = async (productId, callback) => {
+    getMatchesBids = async (productId, callback) => {
+        const bids = await Bid.find({ to: productId });
+        let bidsList = [];
+        if (bids.length === 0) callback([]);
+        for (let i = 0; i < bids.length; i++) {
+            await Message.findOne(
+                { roomId: bids[i]._id },
+                null,
+                { sort: { date: 1 } },
+                async function (err, m) {
+                    if (err) {
+                        callback(err);
+                    } else {
+                        await bidsList.push({
+                            roomId: bids[i]._id,
+                            bid: bids[i],
+                            lastMessage: m,
+                        });
+                        if (bidsList.length === bids.length)
+                            return callback(bidsList);
+                    }
+                }
+            );
+        }
+    };
+    getMatchesProductList = async (productId, callback) => {
         const product = await Product.findOne({ _id: productId });
         let products = [];
         if (product.matches.length === 0) callback([]);
@@ -325,8 +351,10 @@ class ProductController extends BaseController {
     matches = async (req, res, next) => {
         const user = req.user || req.currentUser;
         const productId = req.params.id;
-        this.getSwipingList(productId, data => {
-            res.send(data);
+        this.getMatchesProductList(productId, matches => {
+            this.getMatchesBids(productId, bids => {
+                res.send([...matches, ...bids]);
+            })
         });
     };
 
@@ -375,8 +403,17 @@ class ProductController extends BaseController {
             query.push({ $match: { 'price.max': { $lt: Number(maxPrice) } } });
         }
         const products = await Product.aggregate(query);
-        res.json({ products });
+
+        if (product) {
+            const allLikes = [...product.likes, ...product.dislikes];
+            const newProducts = products.filter(
+                p => !allLikes.some((id, test) => id.toString() === p._id.toString())
+            );
+            return res.json({ products: newProducts });
+        }
+        return res.json({ products });
     };
+
 }
 
 export default new ProductController();

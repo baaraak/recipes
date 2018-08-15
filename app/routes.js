@@ -5,6 +5,7 @@ import MetaController from './controllers/meta.controller';
 import AuthController from './controllers/auth.controller';
 import UsersController from './controllers/users.controller';
 import ProductsController from './controllers/products.controller';
+import BidController from './controllers/bid.controller';
 
 import authenticate from './middleware/authenticate';
 import errorHandler from './middleware/error-handler';
@@ -71,6 +72,7 @@ routes.post('/products/like', authenticate, ProductsController.like);
 routes.post('/products/dislike', authenticate, ProductsController.dislike);
 routes.put('/products', authenticate, ProductsController.update);
 routes.get('/products/:id', ProductsController.getById);
+routes.post('/products/bid', authenticate, BidController.create);
 routes.delete(
   '/products/:id',
   authenticate,
