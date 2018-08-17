@@ -1,54 +1,55 @@
 import BaseController from './base.controller';
 import Product from '../models/product';
 import User from '../models/user';
-import Room from '../models/room';
 import Message from '../models/message';
+import Match from '../models/match';
 import Bid from '../models/bid';
 import { validator } from '../services/validator';
 import createError from '../services/error';
-import { Z_VERSION_ERROR } from 'zlib';
 
 class ProductController extends BaseController {
-    getMatchesBids = async (productId, callback) => {
-        const bids = await Bid.find({ to: productId });
-        let bidsList = [];
-        if (bids.length === 0) callback([]);
-        for (let i = 0; i < bids.length; i++) {
-            await Message.findOne(
-                { roomId: bids[i]._id },
-                null,
-                { sort: { date: 1 } },
-                async function (err, m) {
-                    if (err) {
-                        callback(err);
-                    } else {
-                        await bidsList.push({
-                            roomId: bids[i]._id,
-                            bid: bids[i],
-                            lastMessage: m,
-                        });
-                        if (bidsList.length === bids.length)
-                            return callback(bidsList);
-                    }
-                }
-            );
-        }
-    };
+    // getMatchesBids = async (productId, callback) => {
+    //     const bids = await Bid.find({ to: productId });
+    //     let bidsList = [];
+    //     if (bids.length === 0) callback([]);
+    //     for (let i = 0; i < bids.length; i++) {
+    //         await Message.findOne(
+    //             { roomId: bids[i]._id },
+    //             null,
+    //             { sort: { date: 1 } },
+    //             async function (err, m) {
+    //                 if (err) {
+    //                     callback(err);
+    //                 } else {
+    //                     await bidsList.push({
+    //                         roomId: bids[i]._id,
+    //                         bid: bids[i],
+    //                         lastMessage: m,
+    //                     });
+    //                     if (bidsList.length === bids.length)
+    //                         return callback(bidsList);
+    //                 }
+    //             }
+    //         );
+    //     }
+    // };
+
     getMatchesProductList = async (productId, callback) => {
         const product = await Product.findOne({ _id: productId });
+        const matches = await Match.find({ $or: [{ p1: productId }, { p2: productId }] });
         let products = [];
-        if (product.matches.length === 0) callback([]);
-        for (let i = 0; i < product.matches.length; i++) {
-            await Product.findOne({ _id: product.matches[i].product }, async function (
+        if (matches.length === 0) callback([]);
+        for (let i = 0; i < matches.length; i++) {
+            let matchedProductId = matches[i].p1 !== productId ? matches[i].p1 : matches[i].p2;
+            await Product.findOne({ _id: matchedProductId }, async function (
                 err,
                 p
             ) {
                 if (err) {
                     callback(err);
                 } else {
-                    const { room } = product.matches[i];
                     await Message.findOne(
-                        { roomId: room },
+                        { match: matches[i]._id },
                         null,
                         { sort: { date: 1 } },
                         async function (err, m) {
@@ -56,11 +57,11 @@ class ProductController extends BaseController {
                                 callback(err);
                             } else {
                                 await products.push({
-                                    roomId: room,
+                                    matchId: matches[i]._id,
                                     product: p,
                                     lastMessage: m,
                                 });
-                                if (products.length === product.matches.length)
+                                if (products.length === matches.length)
                                     return callback(products);
                             }
                         }
@@ -205,14 +206,15 @@ class ProductController extends BaseController {
          * ~~ toString() converts objectIds to normal strings
          */
         if (req.post.user.toString() === req.currentUser._id.toString()) {
-            try {
-                await req.post.remove();
-                res.sendStatus(204);
-            } catch (err) {
-                next(err);
-            }
-        } else {
-            res.sendStatus(403);
+            Product.findOneAndUpdate(
+                { _id: req.post._id },
+                { $set: { active: false } },
+                { new: true },
+                function (err, product) {
+                    if (err) return next(res.sendStatus(403));
+                    return res.sendStatus(204);
+                }
+            );
         }
     };
 
@@ -273,42 +275,29 @@ class ProductController extends BaseController {
             l => l.toString() === from.toString()
         );
         if (isMatch) {
-            const room = await new Room();
+            const match = (new Match({ p1: from, p2: to, })).save();
             Product.findOneAndUpdate(
                 { _id: from },
                 {
                     $addToSet: {
                         likes: to,
-                        matches: { room: room._id, product: to },
                     },
                 },
                 { safe: true, upsert: true },
-                (error, fromProduct) =>
-                    error
-                        ? next(createError('server error'))
-                        : Product.findOneAndUpdate(
-                            { _id: to },
-                            {
-                                $addToSet: {
-                                    matches: {
-                                        room: room._id,
-                                        product: from,
-                                    },
-                                },
-                            },
-                            { safe: true, upsert: true },
-                            (error, toProduct) =>
-                                error
-                                    ? next(createError('server error'))
-                                    : res.json({
-                                        success: true,
-                                        isMatch: {
-                                            roomID: room._id,
-                                            fromProduct,
-                                            toProduct,
-                                        },
-                                    })
-                        )
+                async (error, fromProduct) => {
+                    if (error) {
+                        return next(createError('server error'))
+                    }
+
+                    return res.json({
+                        success: true,
+                        isMatch: {
+                            from: fromProduct,
+                            to: likedProduct,
+                            matchId: match._id,
+                        },
+                    })
+                }
             );
         } else {
             Product.findOneAndUpdate(
@@ -352,22 +341,20 @@ class ProductController extends BaseController {
         const user = req.user || req.currentUser;
         const productId = req.params.id;
         this.getMatchesProductList(productId, matches => {
-            this.getMatchesBids(productId, bids => {
-                res.send([...matches, ...bids]);
-            })
+            res.send(matches);
         });
     };
 
     messages = async (req, res, next) => {
         const user = req.user || req.currentUser;
-        const roomId = req.params.id;
-        const messages = await Message.find({ roomId });
+        const match = req.params.id;
+        const messages = await Message.find({ match });
         res.json({ messages });
     };
 
     createMessage = async (req, res, next) => {
-        const { to, from, body, roomId } = req.body;
-        const message = new Message({ to, from, body, roomId });
+        const { to, from, body, match } = req.body;
+        const message = new Message({ to, from, body, match });
         message.save((err, m) => {
             if (err) return res.send({ success: false });
             res.send({ success: true });

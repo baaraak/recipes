@@ -7,7 +7,7 @@ const MessageSchema = new Schema(
     to: { type: Schema.Types.ObjectId, ref: 'Product' },
     isRead: { type: Boolean, default: false },
     body: String,
-    roomId: { type: Schema.Types.ObjectId, ref: 'Room' },
+    match: { type: Schema.Types.ObjectId, ref: 'Match' },
   },
   {
     timestamps: true,

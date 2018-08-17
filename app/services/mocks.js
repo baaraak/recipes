@@ -3,6 +3,8 @@ import ncp from 'ncp';
 
 import User from '../models/user';
 import Product from '../models/product';
+import Match from '../models/match';
+import Message from '../models/message';
 import createError from './error';
 
 const USERS_TOTAL = 15;
@@ -37,6 +39,8 @@ export default async () => {
     try {
         await User.remove();
         await Product.remove();
+        await Match.remove();
+        await Message.remove();
         await ncp('static', 'uploads');
 
         await Array.from({ length: USERS_TOTAL }).forEach(async (_, i) => {
