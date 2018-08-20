@@ -154,6 +154,21 @@ class UsersController extends BaseController {
     }
     res.send({ error: 'Something went wrong, try again later.' })
   };
+
+  subscribe = async (req, res, next) => {
+    const user = req.user || req.currentUser;
+    const { type } = req.body;
+    if (type === 'matches' || type === 'messages' || type === 'promotions') {
+      return User.update({ _id: user._id },
+        { [`subscription.${type}`]: user.subscription[type] ? false : true },
+        { upsert: true, safe: true },
+        (err, doc) => {
+          if (err) return res.send({ error: 'something went wrong.' });
+          return res.send({ success: true });
+        });
+    }
+    res.send({ error: 'Something went wrong, try again later.' })
+  };
 }
 
 export default new UsersController();

@@ -23,6 +23,11 @@ const UserSchema = new Schema(
     },
     country: String,
     password: String,
+    subscription: {
+      matches: Boolean,
+      messages: Boolean,
+      promotions: Boolean,
+    },
     products: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
   },
   {
