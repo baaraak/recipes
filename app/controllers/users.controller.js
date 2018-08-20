@@ -130,6 +130,30 @@ class UsersController extends BaseController {
       res.json({ path: req.file.path });
     }
   };
+
+  changePassword = async (req, res, next) => {
+    const { oldPassword, newPassword } = req.body;
+    if (oldPassword && newPassword) {
+      const user = req.user || req.currentUser;
+      if (!user || !user.authenticate(oldPassword)) {
+        return res.send({ error: 'Old Password incorrect.' })
+      }
+      try {
+        return user.generatePasswordHash(newPassword, (hash) => {
+          User.update({ _id: user._id },
+            { password: hash },
+            { upsert: true, safe: true },
+            (err) => {
+              if (err) return res.send({ error: 'something went wrong.' });
+              return res.send({ success: true });
+            });
+        })
+      } catch (e) {
+        return res.send({ error: 'something went wrong.' })
+      }
+    }
+    res.send({ error: 'Something went wrong, try again later.' })
+  };
 }
 
 export default new UsersController();

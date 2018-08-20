@@ -55,7 +55,7 @@ UserSchema.path('email').validate((email, respond) => {
 }, 'Email already in use.');
 
 //
-UserSchema.pre('save', function(done) {
+UserSchema.pre('save', function (done) {
   // Encrypt password before saving the document
   if (this.isModified('password')) {
     const { saltRounds } = Constants.security;
@@ -94,6 +94,13 @@ UserSchema.methods = {
   generateToken() {
     return jwt.sign({ _id: this._id }, Constants.security.sessionSecret, {
       expiresIn: Constants.security.sessionExpiration,
+    });
+  },
+
+  generatePasswordHash(password, done) {
+    const { saltRounds } = Constants.security;
+    this._hashPassword(password, saltRounds, (err, hash) => {
+      done(hash);
     });
   },
 

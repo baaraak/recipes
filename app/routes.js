@@ -47,6 +47,7 @@ routes.post('/users', UsersController.signup);
 routes.get('/users/me', authenticate, UsersController.me);
 routes.put('/users', authenticate, UsersController.update);
 routes.delete('/users/me', authenticate, UsersController.delete);
+routes.post('/users/changePassword', authenticate, UsersController.changePassword);
 routes.get('/users/:email', UsersController._populate, UsersController.me);
 routes.post(
   '/users/avatar',
