@@ -1,4 +1,4 @@
-import io from 'socket.io';
+import io from '../server';
 
 const VERIFY_USER = 'VERIFY_USER';
 const USER_CONNECTED = 'USER_CONNECTED';
@@ -22,7 +22,7 @@ const uuidv4 = () => new Date();
 *		message {string}
 *		sender {string}
 */
-const createMessage = ({ message = '', sender = '' } = {}) => ({
+const createMessage = (message, sender) => ({
   id: uuidv4(),
   time: getTime(new Date(Date.now())),
   message,
@@ -62,44 +62,41 @@ const getTime = date => {
   return `${date.getHours()}:${('0' + date.getMinutes()).slice(-2)}`;
 };
 
-let connectedUsers = {};
+let connectedProducts = [];
 
 let communityChat = createChat();
 
-module.exports = function(socket) {
-  console.log('Socket Id:' + socket.id);
+module.exports = function (socket) {
 
   let sendMessageToChatFromUser;
 
   let sendTypingFromUser;
 
   // User Connects with username
-  socket.on(USER_CONNECTED, user => {
-    connectedUsers = addUser(connectedUsers, user);
-    socket.user = user;
+  socket.on(USER_CONNECTED, productId => {
+    connectedProducts = addProduct(connectedProducts, productId);
 
-    sendMessageToChatFromUser = sendMessageToChat(user.name);
-    sendTypingFromUser = sendTypingToChat(user.name);
+    sendMessageToChatFromUser = sendMessageToChat(productId);
+    sendTypingFromUser = sendTypingToChat(productId);
 
-    io.emit(USER_CONNECTED, connectedUsers);
-    console.log(connectedUsers);
+    io.emit(USER_CONNECTED, connectedProducts)
   });
 
   // User disconnects
   socket.on('disconnect', () => {
     if ('user' in socket) {
-      connectedUsers = removeUser(connectedUsers, socket.user.name);
+      connectedProducts = removeUser(connectedProducts, socket.user.name);
 
-      io.emit(USER_DISCONNECTED, connectedUsers);
-      console.log('Disconnect', connectedUsers);
+      io.emit(USER_DISCONNECTED, connectedProducts);
+      console.log('Disconnect', connectedProducts);
     }
   });
 
   // User logsout
   socket.on(LOGOUT, () => {
-    connectedUsers = removeUser(connectedUsers, socket.user.name);
-    io.emit(USER_DISCONNECTED, connectedUsers);
-    console.log('Disconnect', connectedUsers);
+    connectedProducts = removeUser(connectedProducts, socket.user.name);
+    io.emit(USER_DISCONNECTED, connectedProducts);
+    console.log('Disconnect', connectedProducts);
   });
 
   // Get Community Chat
@@ -107,13 +104,22 @@ module.exports = function(socket) {
     callback(communityChat);
   });
 
-  socket.on(MESSAGE_SENT, ({ chatId, message }) => {
-    sendMessageToChatFromUser(chatId, message);
+  socket.on(MESSAGE_SENT, (message) => {
+    sendMessageToChatFromUser(message.match, message.body);
   });
 
   socket.on(TYPING, ({ chatId, isTyping }) => {
     sendTypingFromUser(chatId, isTyping);
   });
+
+  const sendMessageToChat = (productId) => {
+    return (chatId, message) => {
+      socket.broadcast.emit(
+        `${MESSAGE_RECIEVED}-${chatId}`,
+        createMessage(message, productId)
+      );
+    };
+  }
 };
 
 /*
@@ -134,14 +140,7 @@ function sendTypingToChat(user) {
 * @param sender {string} username of sender
 * @return function(chatId, message)
 */
-function sendMessageToChat(sender) {
-  return (chatId, message) => {
-    io.emit(
-      `${MESSAGE_RECIEVED}-${chatId}`,
-      createMessage({ message, sender })
-    );
-  };
-}
+
 
 /*
 * Adds user to list passed in.
@@ -149,10 +148,9 @@ function sendMessageToChat(sender) {
 * @param user {User} the user to added to the list.
 * @return userList {Object} Object with key value pairs of Users
 */
-function addUser(userList, user) {
-  let newList = Object.assign({}, userList);
-  newList[user.name] = user;
-  return newList;
+function addProduct(productIdList, productId) {
+  return [...productIdList, productId];
+
 }
 
 /*

@@ -36,7 +36,7 @@ class ProductController extends BaseController {
 
     getMatchesProductList = async (productId, callback) => {
         const product = await Product.findOne({ _id: productId });
-        const matches = await Match.find({ $or: [{ p1: productId }, { p2: productId }] });
+        const matches = await Match.find({ $or: [{ p1: productId }, { p2: productId }], isActive: true });
         let products = [];
         if (matches.length === 0) callback([]);
         for (let i = 0; i < matches.length; i++) {
@@ -320,6 +320,22 @@ class ProductController extends BaseController {
             { safe: true, upsert: true },
             error =>
                 error ? next(createError('server error')) : res.json({ success: true })
+        );
+    };
+
+    unmatch = async (req, res, next) => {
+        const { matchId } = req.params;
+        Match.findOneAndUpdate(
+            { _id: matchId },
+            { isActive: false },
+            { safe: true, upsert: true },
+            error => {
+                if (error) {
+                    next(createError('server error'))
+                } else {
+                    res.json({ success: true })
+                }
+            }
         );
     };
 

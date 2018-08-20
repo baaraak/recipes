@@ -71,6 +71,7 @@ routes.post('/products/like', authenticate, ProductsController.like);
 routes.post('/products/dislike', authenticate, ProductsController.dislike);
 routes.put('/products', authenticate, ProductsController.update);
 routes.get('/products/:id', ProductsController.getById);
+routes.get('/products/unmatch/:matchId', authenticate, ProductsController.unmatch);
 routes.delete(
   '/products/:id',
   authenticate,

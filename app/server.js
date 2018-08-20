@@ -10,7 +10,8 @@ import SocketController from './controllers/socket.controller';
 import mocks from './services/mocks';
 
 const app = express();
-var io = require('socket.io')();
+var io = module.exports.io = require('socket.io')();
+
 var server = require('http').Server(app);
 
 // Enable CORS with various options

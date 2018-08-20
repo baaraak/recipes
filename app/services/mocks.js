@@ -31,7 +31,7 @@ const getProductPrice = () => {
 const getProductWantedCategory = () => {
 
     return Array.from({ length: Math.floor(Math.random() * 3) + 1 }).map(() =>
-        Math.floor(Math.random() * 44)
+        Math.floor(Math.random() * 44).toString()
     );
 };
 
