@@ -23,6 +23,9 @@ const UserSchema = new Schema(
     },
     country: String,
     password: String,
+    facebookID: String,
+    instagramID: String,
+    twitterID: String,
     subscription: {
       matches: Boolean,
       messages: Boolean,
