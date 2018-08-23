@@ -20,6 +20,14 @@ class AuthController extends BaseController {
     }
   };
 
+  facebook = async (req, res, next) => {
+    if (!req.user) {
+      return res.send(401, 'User Not Authenticated');
+    }
+    const user = await User.findOne({ _id: req.user._id });
+    res.send({ token: user.generateToken() });
+  };
+
   categories = async (req, res, next) => {
     res.send(categories);
   };

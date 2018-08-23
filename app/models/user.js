@@ -23,13 +23,40 @@ const UserSchema = new Schema(
     },
     country: String,
     password: String,
-    facebookID: String,
-    instagramID: String,
-    twitterID: String,
     subscription: {
-      matches: Boolean,
-      messages: Boolean,
-      promotions: Boolean,
+      matches: {
+        type: Boolean,
+        default: true
+      },
+      messages: {
+        type: Boolean,
+        default: true
+      },
+      promotions: {
+        type: Boolean,
+        default: true
+      },
+    },
+    facebookProvider: {
+      type: {
+        id: String,
+        token: String
+      },
+      select: false
+    },
+    twitterProvider: {
+      type: {
+        id: String,
+        token: String
+      },
+      select: false
+    },
+    googleProvider: {
+      type: {
+        id: String,
+        token: String
+      },
+      select: false
     },
     products: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
   },
@@ -75,6 +102,41 @@ UserSchema.pre('save', function (done) {
     done();
   }
 });
+
+
+/**
+ * User Statics
+ */
+UserSchema.statics = {
+  upsertFbUser(accessToken, refreshToken, profile, cb) {
+    var that = this;
+    return this.findOne({
+      'facebookProvider.id': profile.id
+    }, function (err, user) {
+      // no user was found, lets create a new one
+      if (!user) {
+        const newUser = new that({
+          fullName: profile.name.givenName,
+          fullName: profile.name.familyName,
+          email: profile.emails[0].value,
+          avatar: profile.photos[0].value,
+          facebookProvider: {
+            id: profile.id,
+            token: accessToken
+          }
+        });
+        newUser.save(function (error, savedUser) {
+          if (error) {
+            console.log(error);
+          }
+          return cb(error, savedUser);
+        });
+      } else {
+        return cb(err, user);
+      }
+    });
+  }
+};
 
 /**
  * User Methods

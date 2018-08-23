@@ -3,6 +3,7 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import methodOverride from 'method-override';
 import helmet from 'helmet';
+import passport from 'passport';
 
 import routes from './routes';
 import Constants from './config/constants';
@@ -18,6 +19,7 @@ var server = require('http').Server(app);
 // https://github.com/expressjs/cors
 app.use(cors());
 app.use(helmet());
+app.use(passport.initialize());
 
 // Parse incoming request bodies
 // https://github.com/expressjs/body-parser

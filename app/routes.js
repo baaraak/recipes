@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
+import passport from 'passport';
 
 import MetaController from './controllers/meta.controller';
 import AuthController from './controllers/auth.controller';
@@ -8,6 +9,8 @@ import ProductsController from './controllers/products.controller';
 
 import authenticate from './middleware/authenticate';
 import errorHandler from './middleware/error-handler';
+
+require('./config/passport')();
 
 const routes = new Router();
 
@@ -40,6 +43,7 @@ routes.get('/', MetaController.index);
 
 // Authentication
 routes.post('/auth/login', AuthController.login);
+routes.post('/auth/facebook', passport.authenticate('facebook-token', { session: false }), AuthController.facebook);
 
 // Users
 routes.get('/users', UsersController.getAll);
