@@ -14,7 +14,7 @@ export default function authenticate(req, res, next) {
     // If token is decoded successfully, find user and attach to our request
     // for use in our route or other middleware
     try {
-      const user = await User.findById(decoded._id).populate('products');
+      const user = await User.findById(decoded._id);
       if (!user) {
         return res.sendStatus(401);
       }

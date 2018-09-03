@@ -1,193 +1,30 @@
 import mongoose from 'mongoose';
-import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import Product from './product';
 import Constants from '../config/constants';
 
 const Schema = mongoose.Schema;
+
 const UserSchema = new Schema(
   {
-    firstName: String,
-    lastName: String,
-    avatar: {
-      type: String,
-      default: 'uploads/avatar.png',
-    },
-    email: {
+    username: {
       type: String,
       unique: true,
     },
-    location: {
-      lat: Number,
-      lng: Number,
-    },
-    country: String,
     password: String,
-    subscription: {
-      matches: {
-        type: Boolean,
-        default: true
-      },
-      messages: {
-        type: Boolean,
-        default: true
-      },
-      promotions: {
-        type: Boolean,
-        default: true
-      },
-    },
-    facebookProvider: {
-      type: {
-        id: String,
-        token: String
-      },
-      select: false
-    },
-    twitterProvider: {
-      type: {
-        id: String,
-        token: String
-      },
-      select: false
-    },
-    googleProvider: {
-      type: {
-        id: String,
-        token: String
-      },
-      select: false
-    },
-    products: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
   },
   {
     timestamps: true,
   }
 );
 
-// Strip out password field when sending user object to client
-UserSchema.set('toJSON', {
-  virtuals: true,
-  transform(doc, obj) {
-    obj.id = obj._id;
-    obj.fullName = `${obj.firstName} ${obj.lastName}`;
-    delete obj._id;
-    delete obj.__v;
-    delete obj.password;
-    return obj;
-  },
-});
-
-// Ensure email has not been taken
-UserSchema.path('email').validate((email, respond) => {
-  UserModel.findOne({ email })
-    .then(user => {
-      respond(!user);
-    })
-    .catch(() => {
-      respond(false);
-    });
-}, 'Email already in use.');
-
-//
-UserSchema.pre('save', function (done) {
-  // Encrypt password before saving the document
-  if (this.isModified('password')) {
-    const { saltRounds } = Constants.security;
-    this._hashPassword(this.password, saltRounds, (err, hash) => {
-      this.password = hash;
-      done();
-    });
-  } else {
-    done();
-  }
-});
-
-
-/**
- * User Statics
- */
-UserSchema.statics = {
-  upsertFbUser(accessToken, refreshToken, profile, cb) {
-    var that = this;
-    return this.findOne({
-      'facebookProvider.id': profile.id
-    }, function (err, user) {
-      // no user was found, lets create a new one
-      if (!user) {
-        const newUser = new that({
-          fullName: profile.name.givenName,
-          fullName: profile.name.familyName,
-          email: profile.emails[0].value,
-          avatar: profile.photos[0].value,
-          facebookProvider: {
-            id: profile.id,
-            token: accessToken
-          }
-        });
-        newUser.save(function (error, savedUser) {
-          if (error) {
-            console.log(error);
-          }
-          return cb(error, savedUser);
-        });
-      } else {
-        return cb(err, user);
-      }
-    });
-  }
-};
-
 /**
  * User Methods
  */
 UserSchema.methods = {
-  getProducts() {
-    return Product.find({ _user: this._id });
-  },
-
-  /**
-   * Authenticate - check if the passwords are the same
-   * @public
-   * @param {String} password
-   * @return {Boolean} passwords match
-   */
-  authenticate(password) {
-    return bcrypt.compareSync(password, this.password);
-  },
-
-  /**
-   * Generates a JSON Web token used for route authentication
-   * @public
-   * @return {String} signed JSON web token
-   */
   generateToken() {
     return jwt.sign({ _id: this._id }, Constants.security.sessionSecret, {
       expiresIn: Constants.security.sessionExpiration,
     });
-  },
-
-  generatePasswordHash(password, done) {
-    const { saltRounds } = Constants.security;
-    this._hashPassword(password, saltRounds, (err, hash) => {
-      done(hash);
-    });
-  },
-
-  /**
-   * Create password hash
-   * @private
-   * @param {String} password
-   * @param {Number} saltRounds
-   * @param {Function} callback
-   * @return {Boolean} passwords match
-   */
-  _hashPassword(
-    password,
-    saltRounds = Constants.security.saltRounds,
-    callback
-  ) {
-    return bcrypt.hash(password, saltRounds, callback);
   },
 };
 

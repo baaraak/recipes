@@ -12,7 +12,7 @@ const defaultConfig = {
   },
 
   root: path.normalize(__dirname + '/../../..'),
-  port: process.env.PORT || 9000,
+  port: process.env.PORT || 3001,
   ip: process.env.IP || '0.0.0.0',
   apiPrefix: '/api/v1/',
 
@@ -44,7 +44,7 @@ const environmentConfigs = {
     mongo: {
       uri:
         process.env.MONGO_URI ||
-        'mongodb://root123:root123@ds129333.mlab.com:29333/tarely',
+        'mongodb://root123:root123@ds235022.mlab.com:35022/recipes',
     },
     security: {
       saltRounds: 4,
